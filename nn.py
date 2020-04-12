@@ -1,149 +1,185 @@
-import numpy as np
-import pandas as pd
-from keras.utils import to_categorical
-from keras.preprocessing.sequence import pad_sequences
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, GRU, Embedding
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-
-data_text = """The unanimous Declaration of the thirteen united States of America, When in the Course of human events, it becomes necessary for one people to dissolve the political bands which have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the Laws of Nature and of Nature's God entitle them, a decent respect to the opinions of mankind requires that they should declare the causes which impel them to the separation.
-
-We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable Rights, that among these are Life, Liberty and the pursuit of Happiness.--That to secure these rights, Governments are instituted among Men, deriving their just powers from the consent of the governed, --That whenever any Form of Government becomes destructive of these ends, it is the Right of the People to alter or to abolish it, and to institute new Government, laying its foundation on such principles and organizing its powers in such form, as to them shall seem most likely to effect their Safety and Happiness. Prudence, indeed, will dictate that Governments long established should not be changed for light and transient causes; and accordingly all experience hath shewn, that mankind are more disposed to suffer, while evils are sufferable, than to right themselves by abolishing the forms to which they are accustomed. But when a long train of abuses and usurpations, pursuing invariably the same Object evinces a design to reduce them under absolute Despotism, it is their right, it is their duty, to throw off such Government, and to provide new Guards for their future security.--Such has been the patient sufferance of these Colonies; and such is now the necessity which constrains them to alter their former Systems of Government. The history of the present King of Great Britain is a history of repeated injuries and usurpations, all having in direct object the establishment of an absolute Tyranny over these States. To prove this, let Facts be submitted to a candid world.
-
-He has refused his Assent to Laws, the most wholesome and necessary for the public good.
-
-He has forbidden his Governors to pass Laws of immediate and pressing importance, unless suspended in their operation till his Assent should be obtained; and when so suspended, he has utterly neglected to attend to them.
-
-He has refused to pass other Laws for the accommodation of large districts of people, unless those people would relinquish the right of Representation in the Legislature, a right inestimable to them and formidable to tyrants only.
-
-He has called together legislative bodies at places unusual, uncomfortable, and distant from the depository of their public Records, for the sole purpose of fatiguing them into compliance with his measures.
-
-He has dissolved Representative Houses repeatedly, for opposing with manly firmness his invasions on the rights of the people.
-
-He has refused for a long time, after such dissolutions, to cause others to be elected; whereby the Legislative powers, incapable of Annihilation, have returned to the People at large for their exercise; the State remaining in the mean time exposed to all the dangers of invasion from without, and convulsions within.
-
-He has endeavoured to prevent the population of these States; for that purpose obstructing the Laws for Naturalization of Foreigners; refusing to pass others to encourage their migrations hither, and raising the conditions of new Appropriations of Lands.
-
-He has obstructed the Administration of Justice, by refusing his Assent to Laws for establishing Judiciary powers.
-
-He has made Judges dependent on his Will alone, for the tenure of their offices, and the amount and payment of their salaries.
-
-He has erected a multitude of New Offices, and sent hither swarms of Officers to harrass our people, and eat out their substance.
-
-He has kept among us, in times of peace, Standing Armies without the Consent of our legislatures.
-
-He has affected to render the Military independent of and superior to the Civil power.
-
-He has combined with others to subject us to a jurisdiction foreign to our constitution, and unacknowledged by our laws; giving his Assent to their Acts of pretended Legislation:
-
-For Quartering large bodies of armed troops among us:
-
-For protecting them, by a mock Trial, from punishment for any Murders which they should commit on the Inhabitants of these States:
-
-For cutting off our Trade with all parts of the world:
-
-For imposing Taxes on us without our Consent:
-
-For depriving us in many cases, of the benefits of Trial by Jury:
-
-For transporting us beyond Seas to be tried for pretended offences
-
-For abolishing the free System of English Laws in a neighbouring Province, establishing therein an Arbitrary government, and enlarging its Boundaries so as to render it at once an example and fit instrument for introducing the same absolute rule into these Colonies:
-
-For taking away our Charters, abolishing our most valuable Laws, and altering fundamentally the Forms of our Governments:
-
-For suspending our own Legislatures, and declaring themselves invested with power to legislate for us in all cases whatsoever.
-
-He has abdicated Government here, by declaring us out of his Protection and waging War against us.
-
-He has plundered our seas, ravaged our Coasts, burnt our towns, and destroyed the lives of our people.
-
-He is at this time transporting large Armies of foreign Mercenaries to compleat the works of death, desolation and tyranny, already begun with circumstances of Cruelty & perfidy scarcely paralleled in the most barbarous ages, and totally unworthy the Head of a civilized nation.
-
-He has constrained our fellow Citizens taken Captive on the high Seas to bear Arms against their Country, to become the executioners of their friends and Brethren, or to fall themselves by their Hands.
-
-He has excited domestic insurrections amongst us, and has endeavoured to bring on the inhabitants of our frontiers, the merciless Indian Savages, whose known rule of warfare, is an undistinguished destruction of all ages, sexes and conditions.
-
-In every stage of these Oppressions We have Petitioned for Redress in the most humble terms: Our repeated Petitions have been answered only by repeated injury. A Prince whose character is thus marked by every act which may define a Tyrant, is unfit to be the ruler of a free people.
-
-Nor have We been wanting in attentions to our Brittish brethren. We have warned them from time to time of attempts by their legislature to extend an unwarrantable jurisdiction over us. We have reminded them of the circumstances of our emigration and settlement here. We have appealed to their native justice and magnanimity, and we have conjured them by the ties of our common kindred to disavow these usurpations, which, would inevitably interrupt our connections and correspondence. They too have been deaf to the voice of justice and of consanguinity. We must, therefore, acquiesce in the necessity, which denounces our Separation, and hold them, as we hold the rest of mankind, Enemies in War, in Peace Friends.
-
-We, therefore, the Representatives of the united States of America, in General Congress, Assembled, appealing to the Supreme Judge of the world for the rectitude of our intentions, do, in the Name, and by Authority of the good People of these Colonies, solemnly publish and declare, That these United Colonies are, and of Right ought to be Free and Independent States; that they are Absolved from all Allegiance to the British Crown, and that all political connection between them and the State of Great Britain, is and ought to be totally dissolved; and that as Free and Independent States, they have full Power to levy War, conclude Peace, contract Alliances, establish Commerce, and to do all other Acts and Things which Independent States may of right do. And for the support of this Declaration, with a firm reliance on the protection of divine Providence, we mutually pledge to each other our Lives, our Fortunes and our sacred Honor."""
-
-
-
-
+import os
+from sys import getsizeof
 import re
+import json
+from keras.utils import to_categorical
+import numpy as np
+from keras.models import Sequential
+from keras.layers import  Dense, GRU, Embedding
+from pyvi import ViTokenizer
+import string
+from collections import Counter 
 
-def text_cleaner(text):
-    # lower case text
-    newString = text.lower()
-    newString = re.sub(r"'s\b","",newString)
-    # remove punctuations
-    newString = re.sub("[^a-zA-Z]", " ", newString) 
-    long_words=[]
-    # remove short word
-    for i in newString.split():
-        if len(i)>=3:                  
-            long_words.append(i)
-    return (" ".join(long_words)).strip()
 
-# preprocess the text
-data_new = text_cleaner(data_text)
 
-def create_seq(text):
-    length = 30
-    sequences = list()
-    for i in range(length, len(text)):
-        # select sequence of tokens
-        seq = text[i-length:i+1]
-        # store
-        sequences.append(seq)
-    print('Total Sequences: %d' % len(sequences))
-    return sequences
+root = "./mysmalltest/"
+print("Loading data from", root)
+entries = os.listdir(root)
+data = ""
+for entry in entries:
+    path = root + entry
+    try:
+        with open(path) as f:
+            currentdata = f.read()
+        data = data +  currentdata
+    except:
+        print("This", path, "is not working") 
+print("Done loading data of", getsizeof(data), "bytes")
 
-# create sequences   
-sequences = create_seq(data_new)
-#print(sequences)
 
-# create a character mapping index
-chars = sorted(list(set(data_new)))
-mapping = dict((c, i) for i, c in enumerate(chars))
+def replace(chuoi):
+    return chuoi.replace("_", " ")
+data = data.translate(str.maketrans('', '', string.punctuation))
+tokens = ViTokenizer.tokenize(data).lower().split()
+tokens = list(map(replace, tokens))
+print("length tokens",len(tokens))
 
-def encode_seq(seq):
-    sequences = list()
-    for line in seq:
-        # integer encode line
-        encoded_seq = [mapping[char] for char in line]
-        # store
-        sequences.append(encoded_seq)
-    return sequences
+  
+def removeElements(lst, k): 
+    counted = Counter(lst) 
+    return [el for el in lst if counted[el] > k] 
+      
+training_tokens = removeElements(tokens, 3)
+print("length training tokens",len(training_tokens))
 
-# encode the sequences
-sequences = encode_seq(sequences)
 
-from sklearn.model_selection import train_test_split
+def mapping(tokens):
+    word_to_id = dict()
+    id_to_word = dict()
+    for i,word in enumerate(set(tokens)):
+        word_to_id[word] = i
+        id_to_word[i] = word
+    return word_to_id, id_to_word
+tokens_zero = "<empty>"
+if tokens_zero not in training_tokens:
+    training_tokens.insert(0,tokens_zero)
+vocab = set(training_tokens)
+vocab_size = len(vocab)
+print("token length",len(training_tokens))
+print("vocab length",vocab_size)
+print("Mapping to create vocabulary")
+word_to_id, id_to_word = mapping(training_tokens)
 
-# vocabulary size
-vocab = len(mapping)
-sequences = np.array(sequences)
-# create X and y
-X, y = sequences[:,:-1], sequences[:,-1]
-# one hot encode y
-y = to_categorical(y, num_classes=vocab)
-# create train and validation sets
-X_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.1, random_state=42)
 
-print('Train shape:', X_tr.shape, 'Val shape:', X_val.shape)
+print("Export word_to_id and id_to_word file")
+with open('word_to_id.json', 'w') as f:
+    json.dump(word_to_id, f, ensure_ascii=False)
+with open('id_to_word.json', 'w') as f:
+    json.dump(id_to_word, f, ensure_ascii=False)
+
+
+def generate_training_data(sentence, word_to_id, window_size):
+    L = len(sentence)
+    X, Y = [], []
+    tempX= []
+    for i in range(L):
+        index_before_target = list(range(max(0, i - window_size), i))           
+        index_after_target = list(range(i + 1, min(i + window_size + 1,L)))           
+        index_before_after_target = index_before_target + index_after_target
+        #print(index_before_after_target)                     
+        for j in index_before_after_target:
+            tempX.append(word_to_id[sentence[j]])
+        #print(tempX)
+        filling_missing_left = len(index_before_target)
+        filling_missing_right = len(index_after_target)
+        while(filling_missing_left < 3):
+            tempX.insert(0, word_to_id['<empty>'])
+            filling_missing_left +=1
+        while(filling_missing_right < 3):
+            tempX.append(word_to_id['<empty>'])
+            filling_missing_right +=1
+        X.append(tempX)
+        Y.append(word_to_id[sentence[i]])
+        tempX = []
+    return np.array(X),Y
+
+print("Generating training data from corpus")
+X,Y = generate_training_data(training_tokens, word_to_id, 3)
+print("length X:",len(X))
+print("length Y:",len(Y))
+print(type(X))
+print("X shape",X.shape)
+print(X[:5,:])
+
+Y = to_categorical(Y, num_classes=vocab_size)
+print("Y shape",Y.shape)
+
+
+def handle_key_range(values):
+    l = len(values)
+    char_key = l - 100
+    word = ''
+    for i in range(char_key):
+        word += " "+ values[i]
+    coefs = np.asarray(values[char_key:], dtype='float32')
+    return word.strip(), coefs
+
+print("Loading word2vec")
+embeddings_index = dict()
+count = 0
+with open('/media/hieu/CA48F77D48F7669B/SpellChecking/model.txt',"r", encoding='utf-8') as f:
+    f.readline() #skip first row  
+    while True:
+        try:
+            line = next(f)
+            values = line.split()
+            word, coefs = handle_key_range(values)
+            embeddings_index[word] = coefs
+            count += 1
+            if count == 10:
+                break
+        except:
+            print("Line is broken")
+print('Loaded %s word vectors.' % len(embeddings_index))
+
+print("Create a weight matrix for words in trainning docs")
+embedding_matrix = np.zeros((vocab_size, 100))
+for word, i in word_to_id.items():
+    #print(word, i)
+    embedding_vector = embeddings_index.get(word)
+    if embedding_vector is not None:
+        try:
+            embedding_matrix[i] = embedding_vector
+        except:
+            embedding_matrix[i] = np.zeros(100)
+
 
 model = Sequential()
-model.add(Embedding(vocab, 50, input_length=30, trainable=True))
+model.add(Embedding(vocab_size, 100, input_length=6, weights=[embedding_matrix], trainable=False))
 model.add(GRU(150, recurrent_dropout=0.1, dropout=0.1))
-model.add(Dense(vocab, activation='softmax'))
+model.add(Dense(vocab_size, activation='softmax'))
+model.compile(loss='categorical_crossentropy', metrics=['acc'], optimizer='adam')
 print(model.summary())
 
-# compile the model
-model.compile(loss='categorical_crossentropy', metrics=['acc'], optimizer='adam')
-# fit the model
-model.fit(X_tr, y_tr, epochs=100, verbose=2, validation_data=(X_val, y_val))
+
+model.fit(X, Y, epochs=1, verbose=2)
+model.save("testing.h5")
+print("Saved model to disk")
+
+
+def encode_input(input_string):
+    return input_string.split(" ")
+
+
+def spell_checking(sentence):
+    encode_sentence = encode_input(sentence)
+    X, y = generate_training_data(encode_sentence, word_to_id, 3)
+    error_words = []
+    for i in range(len(X)):
+        word = encode_sentence[i]
+        word_index = word_to_id[word]
+        yhat = model.predict_proba(np.array([X[i]]))
+        if yhat[:,word_index] < 0.1:
+            error_words.append(encode_sentence[i])
+        print("input:",np.array([X[i]]))
+        print("index:",i)
+        print("probability of ---- ", encode_sentence[i], "----given surrouding is:" ,yhat[:,word_index])
+        print("__________________________________________________________________________")
+    return error_words
+
+print("empty index:",word_to_id['<empty>'])
+spell_checking("chiến tranh thế giới")
+spell_checking("chiến tránh thế giới")
+
+
 
